@@ -56,7 +56,16 @@ module Make (M : M) = struct
 
   type key = M.key list
 
-  type 'a t = Node of 'a option * 'a t M.t
+  type 'a t = Node of 'a option * 'a t M.t 
+  (*
+    Node 
+      (None, [|(s,Node 
+                  (None, [|(d,
+                              Node (Some 1, [||])
+                              )|])
+          )|])
+    Node (char,Node (Option int, [| Node (Option int,...) |]))
+  *)
 
   let empty = Node (None, M.empty)
 

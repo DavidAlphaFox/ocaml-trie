@@ -1,6 +1,7 @@
 (** A Map module built on sorted arrays and binary search. It's much, much
-   slower to build, but slightly faster to do lookups in (due to better cache
-   usage). *)
+    slower to build, but slightly faster to do lookups in (due to better cache
+    usage). *)
+
 type key = char
 type 'a t = (key * 'a) array
 
@@ -12,25 +13,25 @@ let is_empty = function
 
 let add key value t =
   let new_element = key, value in
-  match t with
-  | [||] -> [| new_element |]
-  | _ ->
-    let len = Array.length t in
-    let rec loop i =
-      if i = len then
-        Array.append t [| new_element |]
-      else
-        let k, _ = Array.unsafe_get t i in
-        if k = key then
-          let t = Array.copy t in
-          Array.unsafe_set t i (key, value);
-          t
+    match t with
+    | [||] -> [| new_element |] (* 空数组 *)
+    | _ ->
+      let len = Array.length t in (* 得到当前数组长度 *)
+      let rec loop i =
+        if i = len then (* i 和 len相等的时候，直接将新元素放入数组 *)
+          Array.append t [| new_element |]
         else
-          loop (i + 1)
-    in
-    let t = loop 0 in
-    Array.fast_sort (fun (a, _) (b, _) -> Char.compare a b) t;
-    t
+          let k, _ = Array.unsafe_get t i in (* 得到位置i所在元素 *)
+          if k = key then (* key 相同 *)
+            let t = Array.copy t in
+            Array.unsafe_set t i (key, value);
+            t
+          else
+            loop (i + 1)
+      in
+      let t = loop 0 in
+      Array.fast_sort (fun (a, _) (b, _) -> Char.compare a b) t;
+      t
 
 (* find and remove have very similar code, but deduplicating it into a
    [find_index] function makes [find] about 15% slower. *)
@@ -97,7 +98,7 @@ let remove key = function
 
 let fold f t acc =
   Array.fold_left (fun acc (key, value) ->
-    f key value acc)
+      f key value acc)
     acc t
 
 let compare cmp a b =
@@ -109,20 +110,20 @@ let compare cmp a b =
     1
   else
     Array.map2 (fun (k1, v1) (k2, v2) ->
-      let c = Char.compare k1 k2 in
-      if c <> 0 then
-        c
-      else
-        cmp v1 v2)
+        let c = Char.compare k1 k2 in
+        if c <> 0 then
+          c
+        else
+          cmp v1 v2)
       a b
     |> Array.fold_left (fun acc c ->
-      if acc <> 0 || c = 0 then acc
-      else c) 0
+        if acc <> 0 || c = 0 then acc
+        else c) 0
 
 let equal equal a b =
   try
     Array.map2 (fun (k1, v1) (k2, v2) ->
-      k1 = k2 && equal v1 v2)
+        k1 = k2 && equal v1 v2)
       a b
     |> Array.for_all (fun v -> v)
   with Invalid_argument _ ->
